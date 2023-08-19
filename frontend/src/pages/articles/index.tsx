@@ -37,9 +37,30 @@ const Articles: NextPage<ArticlesProps> = ({ articles }) => {
   );
 };
 
+const getTopics = async() => {
+  try {
+      const res = await fetch('http://localhost:3000/api/topics', {
+          cache: 'no-store',
+      });
+
+      if(!res.ok) {
+          throw new Error("Failed to fetch topics")
+      }
+
+      return res.json();
+  }
+  catch (error) {
+      console.log("Error loading topics: ", error);
+  }
+}
+
 export const getStaticProps: GetStaticProps<ArticlesProps> = async (_) => {
+
+  const { topics } = await getTopics();
+
   // Map the data to ensure all articles have consistent property names
-  const articles = data.map((article) => ({
+  const articles = topics.map((article: { 
+    id: any; _id: any; title: any; authors: any; source: any; pubyear: any; doi: any; claim: any; evidence: any; }) => ({
     id: article.id ?? article._id,
     title: article.title,
     authors: article.authors,

@@ -1,27 +1,56 @@
 import { FormEvent, useState } from "react";
 import formStyles from "../../../styles/Form.module.scss";
+import { useRouter } from "next/navigation";
 
 const NewDiscussion = () => {
   const [title, setTitle] = useState("");
   const [authors, setAuthors] = useState<string[]>([]);
   const [source, setSource] = useState("");
-  const [pubYear, setPubYear] = useState<number>(0);
+  const [pubyear, setPubYear] = useState<number>(0);
   const [doi, setDoi] = useState("");
-  const [summary, setSummary] = useState("");
-  const [linkedDiscussion, setLinkedDiscussion] = useState("");
+  const [claim, setClaim] = useState("");
+  const [evidence, setEvidence] = useState("");
+  
+
+  const router = useRouter();
+  const authorsString = authors.join(", ");
 
   const submitNewArticle = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if(!title || !authors || !source || !pubyear || !doi || !claim || !evidence) {
+      alert("Please fill in all form fields.");
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:3000/api/topics', {
+          method: "POST",
+          headers: {
+              "Content-type": "application/json"
+          },
+          body: JSON.stringify({title, authors: authorsString, source, pubyear, doi, claim, evidence}),
+      });
+
+      if(res.ok) {
+          router.push('/');
+      }
+      else {
+          throw new Error("Failed to create a topic");
+      }
+    } catch (error) {
+        console.log(error);
+    }
 
     console.log(
       JSON.stringify({
         title,
         authors,
         source,
-        publication_year: pubYear,
-        doi,
-        summary,
-        linked_discussion: linkedDiscussion,
+        publication_year: pubyear,
+        doi, 
+        claim, 
+        evidence
       })
     );
   };
@@ -111,7 +140,7 @@ const NewDiscussion = () => {
           type="number"
           name="pubYear"
           id="pubYear"
-          value={pubYear}
+          value={pubyear}
           onChange={(event) => {
             const val = event.target.value;
             if (val === "") {
@@ -134,12 +163,20 @@ const NewDiscussion = () => {
           }}
         />
 
-        <label htmlFor="summary">Summary:</label>
+        <label htmlFor="claim">Claim:</label>
         <textarea
           className={formStyles.formTextArea}
-          name="summary"
-          value={summary}
-          onChange={(event) => setSummary(event.target.value)}
+          name="claim"
+          value={claim}
+          onChange={(event) => setClaim(event.target.value)}
+        />
+
+        <label htmlFor="evidence">Evidence:</label>
+        <textarea
+          className={formStyles.formTextArea}
+          name="evidence"
+          value={evidence}
+          onChange={(event) => setEvidence(event.target.value)}
         />
 
         <button className={formStyles.formItem} type="submit">
